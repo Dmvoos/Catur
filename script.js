@@ -882,6 +882,8 @@ class ChessGame {
 const game = new ChessGame();
 
 const boardEl = document.getElementById('chessboard');
+const viewport3DEl = document.getElementById('viewport-3d');
+const povBarEl = document.getElementById('pov-bar');
 const statusTitleEl = document.getElementById('status-title');
 const statusSubtitleEl = document.getElementById('status-subtitle');
 const turnDotEl = document.getElementById('turn-dot');
@@ -892,14 +894,23 @@ const evalScoreEl = document.getElementById('eval-score');
 const aiThinkingEl = document.getElementById('ai-thinking');
 
 const selectDifficulty = document.getElementById('select-difficulty');
+const selectLighting = document.getElementById('select-lighting');
 const selectTheme = document.getElementById('select-theme');
 const btnUndo = document.getElementById('btn-undo');
 const btnHint = document.getElementById('btn-hint');
 const btnFlip = document.getElementById('btn-flip');
 const btnResign = document.getElementById('btn-resign');
+const btnToggle3D = document.getElementById('btn-toggle-3d');
+const labelToggle3D = document.getElementById('label-toggle-3d');
 
 let pendingPromotionMoves = null;
 let draggedFrom = null;
+let is3DMode = true;
+let renderer3D = null;
+
+if (window.THREE && window.Chess3DRenderer && viewport3DEl) {
+  renderer3D = new window.Chess3DRenderer(game, viewport3DEl, (r, c) => onSquareClick(r, c));
+}
 
 function formatClock(seconds) {
   if (game.timeLimit === 0) return '∞';
@@ -1202,8 +1213,11 @@ function renderStatusAndHistory() {
   moveListEl.scrollTop = moveListEl.scrollHeight;
 }
 
-function renderAll() {
+function renderAll(animatedMove = null) {
   renderBoard();
+  if (renderer3D) {
+    renderer3D.syncWithGame(animatedMove);
+  }
   updatePlayerCards();
   updateClocksUI();
   updateEvalBar();
@@ -1241,6 +1255,9 @@ function onSquareClick(r, c) {
     game.legalMovesForSelected = [];
   }
   renderBoard();
+  if (renderer3D) {
+    renderer3D.syncWithGame();
+  }
 }
 
 function onDragStart(e, r, c) {
@@ -1298,7 +1315,7 @@ function openPromotionModal(promoMoves) {
 
 function executeMoveAndContinue(move) {
   game.makeMove(move);
-  renderAll();
+  renderAll(move);
 
   if (game.gameOver) {
     setTimeout(() => showGameOverModal(), 350);
@@ -1324,7 +1341,7 @@ function triggerAIMove() {
 
     if (aiMove) {
       game.makeMove(aiMove);
-      renderAll();
+      renderAll(aiMove);
       if (game.gameOver) {
         setTimeout(() => showGameOverModal(), 350);
       }
@@ -1375,12 +1392,60 @@ selectDifficulty.addEventListener('change', (e) => {
   }
 });
 
+if (selectLighting) {
+  selectLighting.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (renderer3D) renderer3D.setLightingPreset(val);
+    const labelMap = {
+      rtx_ultra: 'DLSS 5 • PBR Path-Lit',
+      golden_hour: 'HDR • Royal Golden Hour',
+      cyber_neon: 'RTX • Cyberpunk Neon',
+      performance: '60FPS • Fast Raster'
+    };
+    const badgeEl = document.getElementById('rtx-preset-label');
+    if (badgeEl && labelMap[val]) badgeEl.textContent = labelMap[val];
+  });
+}
+
 selectTheme.addEventListener('change', (e) => {
   document.body.setAttribute('data-board-theme', e.target.value);
+  if (renderer3D) renderer3D.setBoardTheme3D(e.target.value);
 });
+
+// Camera POV Selector Buttons
+document.querySelectorAll('.pov-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pov-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (renderer3D) {
+      renderer3D.setPOV(btn.dataset.pov, false);
+    }
+  });
+});
+
+// Toggle 3D / 2D Mode
+if (btnToggle3D) {
+  btnToggle3D.addEventListener('click', () => {
+    is3DMode = !is3DMode;
+    viewport3DEl.classList.toggle('hidden', !is3DMode);
+    boardEl.classList.toggle('hidden', is3DMode);
+    if (povBarEl) povBarEl.classList.toggle('hidden', !is3DMode);
+    labelToggle3D.textContent = is3DMode ? '🎮 Mode: 3D Aktif' : '♟️ Mode: 2D Klasik';
+    if (renderer3D) {
+      renderer3D.enabled = is3DMode;
+      if (is3DMode) {
+        renderer3D.onResize();
+        renderer3D.syncWithGame();
+      }
+    }
+  });
+}
 
 btnFlip.addEventListener('click', () => {
   game.flipped = !game.flipped;
+  if (renderer3D) {
+    renderer3D.setPOV(renderer3D.currentPOV, false);
+  }
   renderAll();
 });
 
@@ -1408,6 +1473,7 @@ btnHint.addEventListener('click', () => {
     game.legalMovesForSelected = game.getLegalMovesForSquare(best.fromR, best.fromC);
     sfx.play('move');
     renderBoard();
+    if (renderer3D) renderer3D.syncWithGame();
   }
 });
 
@@ -1495,6 +1561,10 @@ function startNewConfiguredGame() {
 
   newGameModal.classList.add('hidden');
   document.getElementById('gameover-modal').classList.add('hidden');
+
+  if (renderer3D) {
+    renderer3D.setPOV(renderer3D.currentPOV, false);
+  }
 
   startChessClock();
   renderAll();

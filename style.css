@@ -122,6 +122,17 @@ body {
   font-weight: 800;
 }
 
+.badge-dlss {
+  font-size: 0.68rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #051610;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
 .subtitle {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -370,6 +381,57 @@ body {
   40% { transform: scale(1.1); opacity: 1; }
 }
 
+/* Camera POV Selector Bar */
+.pov-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 0.45rem 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pov-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.pov-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.pov-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 0.32rem 0.62rem;
+  font-family: var(--font-sans);
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pov-btn:hover {
+  color: var(--text-main);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.pov-btn.active {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: var(--accent);
+  color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.18);
+}
+
 /* Chessboard + Evaluation Bar Wrapper */
 .board-container {
   position: relative;
@@ -377,6 +439,74 @@ body {
   gap: 0.6rem;
   align-items: stretch;
   width: 100%;
+}
+
+/* 3D WebGL Viewport */
+.viewport-3d {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  border: 2px solid rgba(245, 158, 11, 0.28);
+  overflow: hidden;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.75);
+  background: radial-gradient(circle at 50% 35%, #111827 0%, #050811 100%);
+  cursor: grab;
+}
+
+.viewport-3d:active {
+  cursor: grabbing;
+}
+
+.chess-canvas-3d {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.rtx-hud-badge {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(7, 10, 18, 0.78);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  backdrop-filter: blur(8px);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #34d399;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.rtx-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.orbit-hint {
+  position: absolute;
+  bottom: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(7, 10, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+  padding: 0.22rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.67rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .chessboard {
