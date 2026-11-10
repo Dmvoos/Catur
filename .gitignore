@@ -1,0 +1,5 @@
+.env
+*credentials*.json
+*secret*
+node_modules/
+Gemini_Generated_Image_*.jpg

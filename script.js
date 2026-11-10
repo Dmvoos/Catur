@@ -1180,7 +1180,7 @@ function renderStatusAndHistory() {
 
   // Move History List
   const totalHalfMoves = game.history.length;
-  moveCounterEl.textContent = `${Math.ceil(totalHalfMoves / 2)} langkah`;
+  moveCounterEl.textContent = `${Math.ceil(totalHalfMoves / 2)}`;
   btnUndo.disabled = totalHalfMoves === 0 || game.aiThinking;
 
   if (totalHalfMoves === 0) {
@@ -1424,19 +1424,69 @@ document.querySelectorAll('.pov-btn').forEach(btn => {
 });
 
 // Toggle 3D / 2D Mode
+const board2DWrap = document.getElementById('board-2d-wrap');
 if (btnToggle3D) {
   btnToggle3D.addEventListener('click', () => {
     is3DMode = !is3DMode;
     viewport3DEl.classList.toggle('hidden', !is3DMode);
+    if (board2DWrap) board2DWrap.classList.toggle('hidden', is3DMode);
     boardEl.classList.toggle('hidden', is3DMode);
-    if (povBarEl) povBarEl.classList.toggle('hidden', !is3DMode);
-    labelToggle3D.textContent = is3DMode ? '🎮 Mode: 3D Aktif' : '♟️ Mode: 2D Klasik';
+    labelToggle3D.textContent = is3DMode
+      ? '🎮 Mode Saat Ini: 3D Gothic Royal (Klik ke 2D)'
+      : '♟️ Mode Saat Ini: 2D Klasik (Klik ke 3D)';
     if (renderer3D) {
       renderer3D.enabled = is3DMode;
       if (is3DMode) {
         renderer3D.onResize();
         renderer3D.syncWithGame();
       }
+    }
+  });
+}
+
+// Taskbar Pop-up Dropdown System
+const popupTriggers = document.querySelectorAll('.popup-trigger');
+const popups = document.querySelectorAll('.taskbar-popup');
+
+function closeAllPopups() {
+  popups.forEach(p => p.classList.add('hidden'));
+  popupTriggers.forEach(btn => btn.classList.remove('active'));
+}
+
+popupTriggers.forEach(trigger => {
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const targetId = trigger.dataset.popup;
+    const targetPopup = document.getElementById(targetId);
+    if (!targetPopup) return;
+
+    const isAlreadyOpen = !targetPopup.classList.contains('hidden');
+    closeAllPopups();
+    if (!isAlreadyOpen) {
+      targetPopup.classList.remove('hidden');
+      trigger.classList.add('active');
+    }
+  });
+});
+
+document.querySelectorAll('[data-close-popup]').forEach(btn => {
+  btn.addEventListener('click', () => closeAllPopups());
+});
+
+document.addEventListener('pointerdown', (e) => {
+  if (!e.target.closest('.taskbar-popup') && !e.target.closest('.popup-trigger')) {
+    closeAllPopups();
+  }
+});
+
+// Native Fullscreen Toggle Button
+const btnFullscreen = document.getElementById('btn-fullscreen');
+if (btnFullscreen) {
+  btnFullscreen.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
     }
   });
 }

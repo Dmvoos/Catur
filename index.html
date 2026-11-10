@@ -3,256 +3,269 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>GrandChess 3D RTX — Game Catur AI Modern</title>
-  <meta name="description" content="Mainkan Catur 3D dengan grafik PBR & Lighting setara DLSS 5 melawan AI Cerdas (Mudah hingga Grandmaster) atau 2 Pemain Lokal." />
+  <title>GrandChess 3D RTX — Gothic Royal Fullscreen Edition</title>
+  <meta name="description" content="Game Catur 3D Fullscreen dengan Tekstur Gothic Royal Pewter & Burled Walnut, Lighting DLSS 5, Multi-POV Camera, dan AI Engine." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-board-theme="emerald">
-  <!-- Background Ambient Glow -->
-  <div class="ambient-bg"></div>
 
-  <!-- Top Navigation Header -->
-  <header class="app-header">
-    <div class="brand">
-      <div class="brand-logo" aria-hidden="true">
-        <svg viewBox="0 0 45 45" width="32" height="32">
+  <!-- ==================== FULLSCREEN 3D / 2D GAMEPLAY STAGE ==================== -->
+  <main class="fullscreen-stage" aria-label="Area Papan Catur Fullscreen">
+    <!-- 3D WebGL Fullscreen Viewport -->
+    <div id="viewport-3d" class="viewport-3d">
+      <div class="rtx-hud-badge">
+        <span class="rtx-dot"></span>
+        <span id="rtx-preset-label">DLSS 5 • Gothic Royal Pewter &amp; Walnut</span>
+      </div>
+      <div class="orbit-hint">Klik bidak untuk jalan &bull; Seret untuk putar kamera 360° &bull; Scroll untuk Zoom</div>
+    </div>
+
+    <!-- 2D Classic Board Wrapper (Centered when 2D mode is toggled) -->
+    <div id="board-2d-wrap" class="board-2d-wrap hidden">
+      <div id="chessboard" class="chessboard" role="grid" aria-label="Papan Catur 2D"></div>
+    </div>
+
+    <!-- Floating Left Evaluation Bar -->
+    <div class="eval-bar-container" title="Evaluasi Posisi Real-time">
+      <div id="eval-bar-fill" class="eval-bar-fill" style="height: 50%;"></div>
+      <span id="eval-score" class="eval-score">0.0</span>
+    </div>
+  </main>
+
+  <!-- ==================== FLOATING TOP TASKBAR ==================== -->
+  <header class="top-taskbar" role="toolbar" aria-label="Taskbar Kontrol Permainan">
+    <!-- Brand & Live Turn Status -->
+    <div class="taskbar-group brand-status-group">
+      <div class="brand-logo" title="GrandChess 3D Gothic Royal">
+        <svg viewBox="0 0 45 45" width="24" height="24">
           <g fill="none" fill-rule="evenodd" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" fill="#fbbf24"/>
             <path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" fill="#fbbf24"/>
-            <circle cx="15.5" cy="14.5" r="1.2" fill="#0f172a" stroke="none"/>
           </g>
         </svg>
       </div>
-      <div>
-        <h1>GrandChess <span class="badge-accent">3D RTX</span> <span class="badge-dlss">DLSS 5</span></h1>
-        <p class="subtitle">PBR Marble &amp; Wood Textures &bull; Multi-POV Camera &bull; AI Engine</p>
+
+      <div id="status-banner" class="taskbar-status-pill">
+        <span class="status-indicator" id="turn-dot"></span>
+        <div class="status-texts">
+          <span id="status-title" class="status-title">Giliran Putih</span>
+          <span id="status-subtitle" class="status-subtitle hidden">Pilih bidak</span>
+        </div>
+        <div id="ai-thinking" class="thinking-indicator hidden">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
       </div>
     </div>
 
-    <div class="header-actions">
-      <button id="btn-toggle-3d" class="btn btn-secondary" title="Ganti Mode Tampilan 3D / 2D">
-        <span id="label-toggle-3d">🎮 Mode: 3D Aktif</span>
+    <div class="taskbar-divider"></div>
+
+    <!-- Compact Player & Timer Pills -->
+    <div class="taskbar-group players-taskbar-group">
+      <!-- Human / Bottom Player Pill -->
+      <div id="player-bottom" class="taskbar-player-pill active-turn">
+        <span id="avatar-bottom" class="mini-avatar">👤</span>
+        <div class="mini-meta">
+          <span id="name-bottom" class="mini-name">Anda (Putih)</span>
+          <span id="badge-bottom" class="mini-badge hidden">Pemain</span>
+        </div>
+        <span id="advantage-bottom" class="material-badge hidden">+0</span>
+        <span id="timer-bottom" class="mini-clock">10:00</span>
+      </div>
+
+      <span class="vs-label">VS</span>
+
+      <!-- AI / Top Player Pill -->
+      <div id="player-top" class="taskbar-player-pill">
+        <span id="avatar-top" class="mini-avatar">🤖</span>
+        <div class="mini-meta">
+          <span id="name-top" class="mini-name">AI</span>
+          <span id="badge-top" class="mini-badge hidden">Sedang</span>
+        </div>
+        <span id="advantage-top" class="material-badge hidden">+0</span>
+        <span id="timer-top" class="mini-clock">10:00</span>
+      </div>
+    </div>
+
+    <div class="taskbar-divider"></div>
+
+    <!-- Quick Action Buttons & Pop-Up Toggles -->
+    <div class="taskbar-group actions-taskbar-group">
+      <!-- Pop-up Toggle: Camera POV -->
+      <button type="button" class="taskbar-btn popup-trigger" data-popup="popup-pov" title="Pilih Perspektif Kamera POV & Mode 3D/2D">
+        <span>🎥 POV</span>
       </button>
 
-      <button id="btn-sound" class="icon-btn" title="Suara Efek Aktif/Nonaktif" aria-label="Toggle Suara">
-        <svg id="icon-sound-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+      <!-- Pop-up Toggle: Move History & Captured Pieces -->
+      <button type="button" class="taskbar-btn popup-trigger" data-popup="popup-history" title="Buka Riwayat Langkah & Bidak Termakan">
+        <span>📜 Riwayat</span>
+        <span id="move-counter" class="taskbar-count-badge">0</span>
+      </button>
+
+      <!-- Pop-up Toggle: Settings, AI Difficulty, Lighting & Textures -->
+      <button type="button" class="taskbar-btn popup-trigger" data-popup="popup-settings" title="Pengaturan AI, Lighting DLSS 5, & Tekstur">
+        <span>⚙️ Grafik &amp; AI</span>
+      </button>
+
+      <!-- Direct Gameplay Actions -->
+      <button id="btn-undo" class="taskbar-icon-btn" title="Undo Langkah" disabled>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 7v6h6"></path>
+          <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+        </svg>
+      </button>
+
+      <button id="btn-hint" class="taskbar-icon-btn" title="Saran Langkah AI (Hint)">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M9 18h6"></path>
+          <path d="M10 22h4"></path>
+          <path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"></path>
+        </svg>
+      </button>
+
+      <button id="btn-flip" class="taskbar-icon-btn" title="Putar Arah Papan / POV">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polyline points="17 1 21 5 17 9"></polyline>
+          <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+          <polyline points="7 23 3 19 7 15"></polyline>
+          <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+        </svg>
+      </button>
+
+      <button id="btn-sound" class="taskbar-icon-btn" title="Suara Efek Aktif/Nonaktif">
+        <svg id="icon-sound-on" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
         </svg>
-        <svg id="icon-sound-off" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <svg id="icon-sound-off" class="hidden" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <line x1="23" y1="9" x2="17" y2="15"></line>
           <line x1="17" y1="9" x2="23" y2="15"></line>
         </svg>
       </button>
 
-      <button id="btn-new-game-modal" class="btn btn-primary">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
+      <button id="btn-fullscreen" class="taskbar-icon-btn" title="Layar Penuh (Fullscreen)">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
         </svg>
-        <span>Permainan Baru</span>
+      </button>
+
+      <button id="btn-new-game-modal" class="taskbar-btn taskbar-btn-primary" title="Mulai Permainan Baru">
+        <span>➕ Baru</span>
       </button>
     </div>
   </header>
 
-  <!-- Main Layout Container -->
-  <main class="game-layout">
-    <!-- Left / Center Column: POV Controls + Board + Player Bars -->
-    <section class="board-section" aria-label="Area Papan Catur">
-      <!-- Top Player Card (Opponent / Black by default) -->
-      <div id="player-top" class="player-card">
-        <div class="player-info">
-          <div id="avatar-top" class="player-avatar ai-avatar">🤖</div>
-          <div class="player-meta">
-            <div class="player-name-row">
-              <span id="name-top" class="player-name">Komputer AI</span>
-              <span id="badge-top" class="difficulty-pill">Menengah (1200)</span>
-            </div>
-            <div class="captured-row">
-              <div id="captured-top" class="captured-pieces"></div>
-              <span id="advantage-top" class="material-badge hidden">+0</span>
-            </div>
-          </div>
-        </div>
-        <div class="player-right">
-          <div id="ai-thinking" class="thinking-indicator hidden">
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span>Berpikir</span>
-          </div>
-          <div id="timer-top" class="chess-clock">10:00</div>
-        </div>
+  <!-- ==================== FLOATING TASKBAR POP-UP PANELS ==================== -->
+
+  <!-- POP-UP 1: Camera POV & 3D/2D Mode -->
+  <div id="popup-pov" class="taskbar-popup hidden" role="dialog" aria-label="Panel Perspektif Kamera">
+    <div class="popup-header">
+      <h4>🎥 Perspektif Kamera (POV)</h4>
+      <button type="button" class="popup-close" data-close-popup>&times;</button>
+    </div>
+    <div id="pov-bar" class="pov-grid">
+      <button type="button" class="pov-btn active" data-pov="player">
+        <span>👁️ POV Pemain</span>
+        <small>Orang pertama dari belakang bidak</small>
+      </button>
+      <button type="button" class="pov-btn" data-pov="cinematic">
+        <span>🎬 Sinematik 45°</span>
+        <small>Sudut perspektif klasik mewah</small>
+      </button>
+      <button type="button" class="pov-btn" data-pov="top">
+        <span>🦅 Taktis Atas</span>
+        <small>Tampak atas vertikal presisi</small>
+      </button>
+      <button type="button" class="pov-btn" data-pov="side">
+        <span>📐 Tampak Samping</span>
+        <small>Profil patung &amp; ukiran meja</small>
+      </button>
+    </div>
+    <div class="popup-divider"></div>
+    <button id="btn-toggle-3d" class="btn btn-secondary btn-full">
+      <span id="label-toggle-3d">🎮 Mode Saat Ini: 3D Gothic Royal (Klik ke 2D)</span>
+    </button>
+  </div>
+
+  <!-- POP-UP 2: Move History & Captured Pieces -->
+  <div id="popup-history" class="taskbar-popup hidden" role="dialog" aria-label="Panel Riwayat Langkah">
+    <div class="popup-header">
+      <h4>📜 Riwayat Langkah &amp; Bidak Termakan</h4>
+      <button type="button" class="popup-close" data-close-popup>&times;</button>
+    </div>
+
+    <div class="captured-summary-box">
+      <div class="cap-line">
+        <span class="cap-label">Putih Memakan:</span>
+        <div id="captured-bottom" class="captured-pieces"></div>
+      </div>
+      <div class="cap-line">
+        <span class="cap-label">Hitam Memakan:</span>
+        <div id="captured-top" class="captured-pieces"></div>
+      </div>
+    </div>
+
+    <div id="move-list" class="move-list">
+      <div class="empty-history">Belum ada langkah. Silakan mulai permainan!</div>
+    </div>
+
+    <div class="popup-footer-row">
+      <button id="btn-copy-pgn" class="btn-small">📋 Salin Notasi PGN</button>
+      <button id="btn-resign" class="btn-small danger-text">🏳️ Reset Papan</button>
+    </div>
+  </div>
+
+  <!-- POP-UP 3: Graphics, Lighting DLSS 5, Textures & AI Level -->
+  <div id="popup-settings" class="taskbar-popup hidden" role="dialog" aria-label="Panel Pengaturan Grafik & AI">
+    <div class="popup-header">
+      <h4>⚙️ Pengaturan AI, Lighting &amp; Tekstur</h4>
+      <button type="button" class="popup-close" data-close-popup>&times;</button>
+    </div>
+
+    <div class="popup-settings-body">
+      <div class="setting-row">
+        <label for="select-difficulty">Level Lawan AI</label>
+        <select id="select-difficulty" class="select-input">
+          <option value="easy">🌱 Mudah (~600)</option>
+          <option value="medium" selected>⚔️ Sedang (~1200)</option>
+          <option value="hard">🔥 Sulit (~1600)</option>
+          <option value="master">👑 Grandmaster (~2000)</option>
+          <option value="pvp">👥 2 Pemain Lokal</option>
+        </select>
       </div>
 
-      <!-- Camera POV Bar -->
-      <div id="pov-bar" class="pov-bar" aria-label="Pilih Perspektif Kamera 3D">
-        <span class="pov-label">🎥 Kamera POV:</span>
-        <div class="pov-buttons">
-          <button type="button" class="pov-btn active" data-pov="player" title="Sudut pandang orang pertama dari belakang bidak Anda">
-            👁️ POV Pemain
-          </button>
-          <button type="button" class="pov-btn" data-pov="cinematic" title="Sudut kamera sinematik 45 derajat">
-            🎬 Sinematik 45°
-          </button>
-          <button type="button" class="pov-btn" data-pov="top" title="Sudut pandang vertikal dari atas">
-            🦅 Taktis Atas
-          </button>
-          <button type="button" class="pov-btn" data-pov="side" title="Sudut pandang samping papan">
-            📐 Samping
-          </button>
-        </div>
+      <div class="setting-row">
+        <label for="select-lighting">Lighting &amp; Render</label>
+        <select id="select-lighting" class="select-input">
+          <option value="rtx_ultra" selected>✨ DLSS 5 • Studio Gothic HDR</option>
+          <option value="golden_hour">🌅 Royal Warm Bronze</option>
+          <option value="cyber_neon">🔮 Moonlight Cold Rim</option>
+          <option value="performance">⚡ Performa 60FPS Ringan</option>
+        </select>
       </div>
 
-      <!-- Chessboard Wrapper (3D WebGL Viewport + 2D Fallback Board + Eval Bar) -->
-      <div class="board-container">
-        <!-- 3D Viewport Container -->
-        <div id="viewport-3d" class="viewport-3d">
-          <div class="rtx-hud-badge">
-            <span class="rtx-dot"></span>
-            <span id="rtx-preset-label">DLSS 5 • PBR Path-Lit</span>
-          </div>
-          <div class="orbit-hint">Klik bidak untuk jalan &bull; Seret untuk putar kamera 360° &bull; Scroll untuk Zoom</div>
-        </div>
-
-        <!-- 2D Classic Board (Hidden when 3D is active) -->
-        <div id="chessboard" class="chessboard hidden" role="grid" aria-label="Papan Catur 2D"></div>
-        
-        <!-- Evaluation Bar on the side of the board -->
-        <div class="eval-bar-container" title="Evaluasi Posisi">
-          <div id="eval-bar-fill" class="eval-bar-fill" style="height: 50%;"></div>
-          <span id="eval-score" class="eval-score">0.0</span>
-        </div>
+      <div class="setting-row">
+        <label for="select-theme">Tekstur Papan</label>
+        <select id="select-theme" class="select-input">
+          <option value="emerald" selected>🛡️ Gothic Silver Filigree &amp; Ebony</option>
+          <option value="wood">🪵 Antique Bronze &amp; Walnut</option>
+          <option value="ocean">⚔️ Cold Steel &amp; Obsidian</option>
+          <option value="midnight">👑 Royal Gold &amp; Charcoal</option>
+        </select>
       </div>
+    </div>
+  </div>
 
-      <!-- Bottom Player Card (Human / White by default) -->
-      <div id="player-bottom" class="player-card active-turn">
-        <div class="player-info">
-          <div id="avatar-bottom" class="player-avatar human-avatar">👤</div>
-          <div class="player-meta">
-            <div class="player-name-row">
-              <span id="name-bottom" class="player-name">Anda (Putih)</span>
-              <span id="badge-bottom" class="difficulty-pill human-pill">Pemain</span>
-            </div>
-            <div class="captured-row">
-              <div id="captured-bottom" class="captured-pieces"></div>
-              <span id="advantage-bottom" class="material-badge hidden">+0</span>
-            </div>
-          </div>
-        </div>
-        <div class="player-right">
-          <div id="timer-bottom" class="chess-clock">10:00</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Right Column: Controls, Status, Settings, Move History -->
-    <aside class="sidebar-panel">
-      <!-- Status Banner -->
-      <div id="status-banner" class="status-banner">
-        <div class="status-indicator" id="turn-dot"></div>
-        <div class="status-text-wrap">
-          <div id="status-title" class="status-title">Giliran Putih Melangkah</div>
-          <div id="status-subtitle" class="status-subtitle">Pilih bidak untuk melihat langkah valid</div>
-        </div>
-      </div>
-
-      <!-- Quick Settings Bar (Difficulty, Lighting, & Material Theme) -->
-      <div class="control-card">
-        <div class="setting-row">
-          <label for="select-difficulty">Level Lawan AI</label>
-          <select id="select-difficulty" class="select-input">
-            <option value="easy">🌱 Mudah (Pemula ~600)</option>
-            <option value="medium" selected>⚔️ Sedang (Menengah ~1200)</option>
-            <option value="hard">🔥 Sulit (Mahir ~1600)</option>
-            <option value="master">👑 Grandmaster (~2000)</option>
-            <option value="pvp">👥 2 Pemain (Lokal 1 Layar)</option>
-          </select>
-        </div>
-
-        <div class="setting-row">
-          <label for="select-lighting">Lighting &amp; Render</label>
-          <select id="select-lighting" class="select-input">
-            <option value="rtx_ultra" selected>✨ RTX Ultra • DLSS 5 HDR</option>
-            <option value="golden_hour">🌅 Royal Golden Hour</option>
-            <option value="cyber_neon">🔮 Cyberpunk Raytrace</option>
-            <option value="performance">⚡ Performa Ringan (60FPS)</option>
-          </select>
-        </div>
-
-        <div class="setting-row">
-          <label for="select-theme">Tekstur Material</label>
-          <select id="select-theme" class="select-input">
-            <option value="emerald" selected>💎 Marmer Zamrud &amp; Carrara</option>
-            <option value="wood">🪵 Kayu Jati &amp; Ebony</option>
-            <option value="ocean">🌊 Safir Laut &amp; Porselen</option>
-            <option value="midnight">🌌 Obsidian &amp; Ungu Royal</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Action Buttons Toolbar -->
-      <div class="action-grid">
-        <button id="btn-undo" class="action-btn" title="Batalkan Langkah Terakhir" disabled>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 7v6h6"></path>
-            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
-          </svg>
-          <span>Undo</span>
-        </button>
-
-        <button id="btn-hint" class="action-btn" title="Minta Saran Langkah Terbaik dari AI">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18h6"></path>
-            <path d="M10 22h4"></path>
-            <path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"></path>
-          </svg>
-          <span>Saran AI</span>
-        </button>
-
-        <button id="btn-flip" class="action-btn" title="Putar Arah Papan Catur">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="17 1 21 5 17 9"></polyline>
-            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
-            <polyline points="7 23 3 19 7 15"></polyline>
-            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
-          </svg>
-          <span>Putar POV</span>
-        </button>
-
-        <button id="btn-resign" class="action-btn danger-hover" title="Ulang atau menyerah">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-            <line x1="4" y1="22" x2="4" y2="15"></line>
-          </svg>
-          <span>Reset</span>
-        </button>
-      </div>
-
-      <!-- Move History Panel -->
-      <div class="history-card">
-        <div class="history-header">
-          <h3>Riwayat Langkah (Notasi)</h3>
-          <span id="move-counter" class="move-count-pill">0 langkah</span>
-        </div>
-        <div id="move-list" class="move-list">
-          <div class="empty-history">Belum ada langkah. Silakan mulai permainan!</div>
-        </div>
-        <div class="history-footer">
-          <button id="btn-copy-pgn" class="btn-small" title="Salin notasi PGN ke clipboard">📋 Salin Notasi PGN</button>
-        </div>
-      </div>
-    </aside>
-  </main>
+  <!-- ==================== MODALS (PROMOTION, NEW GAME, GAME OVER) ==================== -->
 
   <!-- Modal: Pawn Promotion -->
   <div id="promotion-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="promo-title">
     <div class="modal-card promo-card">
-      <h3 id="promo-title">Promosi Pion!</h3>
-      <p>Pilih bidak pengganti untuk pion Anda:</p>
+      <h3 id="promo-title">Promosi Prajurit!</h3>
+      <p>Pilih bangsawan pengganti untuk prajurit Anda:</p>
       <div id="promo-options" class="promo-choices"></div>
     </div>
   </div>
@@ -298,11 +311,11 @@
         </div>
 
         <div class="form-group" id="color-picker-group">
-          <label>Pilih Warna Bidak Anda</label>
+          <label>Pilih Warna Pasukan Anda</label>
           <div class="side-selector">
             <button type="button" class="side-btn active" data-side="w">
               <span class="side-piece">♔</span>
-              <span>Putih (Jalan Dulu)</span>
+              <span>Perak Putih (Jalan Dulu)</span>
             </button>
             <button type="button" class="side-btn" data-side="random">
               <span class="side-piece">🎲</span>
@@ -310,7 +323,7 @@
             </button>
             <button type="button" class="side-btn" data-side="b">
               <span class="side-piece">♚</span>
-              <span>Hitam</span>
+              <span>Perunggu Hitam</span>
             </button>
           </div>
         </div>
@@ -357,7 +370,7 @@
     </div>
   </div>
 
-  <!-- Three.js WebGL Engine + 3D Renderer + Chess Game Logic -->
+  <!-- Three.js WebGL Engine + 3D Gothic Renderer + Chess Game Logic -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="renderer3d.js"></script>
   <script src="script.js"></script>
